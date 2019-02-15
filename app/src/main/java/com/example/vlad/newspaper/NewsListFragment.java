@@ -1,5 +1,8 @@
 package com.example.vlad.newspaper;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,20 +17,34 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.vlad.newspaper.network.NewsFetcher;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class NewsListFragment extends Fragment {
     private static final String DATE_FORMAT = "EEE, MMM dd, yyyy hh:mm a";
+    private List<News> newsList;
     private RecyclerView recyclerView;
-    private NewsAdapter adapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+
+        boolean isConnected = ((ConnectivityManager) getActivity()
+                .getApplicationContext()
+                .getSystemService(Context.CONNECTIVITY_SERVICE))
+                .getActiveNetworkInfo() != null;
+
+        if (isConnected) {
+            new FetchNewsTask().execute();
+        } else {
+            Toast.makeText(getActivity(), R.string.internet_connection_error, Toast.LENGTH_LONG)
+                    .show();
+        }
+
     }
 
     @Nullable
@@ -39,22 +56,27 @@ public class NewsListFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
 
-        List<News> testList = new ArrayList<>();
-        for (int i = 0; i < 50; i++) {
-            News news = new News();
-            news.setSourceName("source #" + (i+1));
-            news.setTitle("Title #" + (i+1));
-            news.setDate(new Date());
-            news.setUrl("");
-            news.setUrlToImage("https://cnet2.cbsistatic.com/img/P-ItOMWp5HlJRfcSeXuERoyG8kY=/724x407/2019/02/15/3620cd79-3550-4155-a2f3-646e54995831/samsung-wearable-leak.jpg");
-            testList.add(news);
-        }
-
-
-        adapter = new NewsAdapter(testList);
-        recyclerView.setAdapter(adapter);
+        setupAdapter();
 
         return view;
+    }
+
+    private void setupAdapter() {
+        if (newsList == null) newsList = new ArrayList<>();
+        recyclerView.setAdapter(new NewsAdapter(newsList));
+    }
+
+    private class FetchNewsTask extends AsyncTask<Void,Void,List<News>> {
+        @Override
+        protected List<News> doInBackground(Void... voids) {
+            return new NewsFetcher().fetchNewsItems();
+        }
+
+        @Override
+        protected void onPostExecute(List<News> news) {
+            newsList = news;
+            setupAdapter();
+        }
     }
 
     private class NewsAdapter extends RecyclerView.Adapter<NewsHolder> {
@@ -113,7 +135,7 @@ public class NewsListFragment extends Fragment {
             this.news = news;
             titleTextView.setText(this.news.getTitle());
             sourceTextView.setText(this.news.getSourceName());
-            dateTextView.setText(DateFormat.format(DATE_FORMAT, this.news.getDate()));
+            dateTextView.setText(DateFormat.format("yyyy-MM-dd HH:mm", this.news.getDate()));
 
             Picasso.get()
                     .load(news.getUrlToImage())

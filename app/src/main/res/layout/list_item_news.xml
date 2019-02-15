@@ -9,28 +9,34 @@
     <TextView
         android:id="@+id/news_title"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text="News Title"
+        android:layout_marginBottom="8dp"
         android:textColor="@android:color/black"
-        android:textSize="18sp"
         app:layout_constraintEnd_toStartOf="@+id/news_image"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/news_source"
+        android:textSize="16sp"
+        android:ellipsize="end"
+        android:maxLines="3"
+        android:text="News Title"/>
 
     <TextView
         android:id="@+id/news_source"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         app:layout_constraintEnd_toStartOf="@+id/news_date"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:textSize="10sp"
+        android:textSize="12sp"
+        android:ellipsize="end"
+        android:maxLines="1"
         android:text="Source"/>
 
     <TextView
@@ -38,21 +44,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
-        android:text="News Date"
         app:layout_constraintEnd_toStartOf="@+id/news_image"
         app:layout_constraintStart_toEndOf="@id/news_source"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:textSize="10sp"/>
+        android:maxLines="1"
+        android:textSize="12sp"
+        android:text="News Date"/>
 
     <ImageView
         android:id="@+id/news_image"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="16dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:contentDescription="@string/news_image_label"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
