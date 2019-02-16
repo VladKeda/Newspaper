@@ -60,13 +60,14 @@ public class NewsFetcher {
         return new String(getUrlBytes(urlSpec));
     }
 
-    public List<News> fetchNewsItems() {
+    public List<News> fetchNewsItems(int page) {
         List<News> newsList = null;
         try {
             String urlSpec = Uri.parse("https://newsapi.org/v2/top-headlines")
                                 .buildUpon()
                                 .appendQueryParameter("apiKey", API_KEY)
                                 .appendQueryParameter("country", country)
+                                .appendQueryParameter("page", String.valueOf(page))
                                 .build().toString();
             String jsonStr = getUrlString(urlSpec);
             Log.i(TAG, "JSON: " + jsonStr);

@@ -8,9 +8,11 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,9 +27,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NewsListFragment extends Fragment {
-    private static final String DATE_FORMAT = "EEE, MMM dd, yyyy hh:mm a";
+    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm";
+    private int numPage;
+    private boolean isLoading;
     private List<News> newsList;
     private RecyclerView recyclerView;
+    private NewsAdapter adapter;
 
 
     @Override
@@ -35,13 +40,16 @@ public class NewsListFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
+        numPage = 1;
+        newsList = new ArrayList<>();
+
         boolean isConnected = ((ConnectivityManager) getActivity()
                 .getApplicationContext()
                 .getSystemService(Context.CONNECTIVITY_SERVICE))
                 .getActiveNetworkInfo() != null;
 
         if (isConnected) {
-            new FetchNewsTask().execute();
+            new FetchNewsTask().execute(String.valueOf(numPage));
         } else {
             Toast.makeText(getActivity(), R.string.internet_connection_error, Toast.LENGTH_LONG)
                     .show();
@@ -56,27 +64,75 @@ public class NewsListFragment extends Fragment {
 
         recyclerView = (RecyclerView) view.findViewById(R.id.news_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
 
-        setupAdapter();
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                int visibleItemCount = recyclerView.getLayoutManager().getChildCount();
+                int totalItemCount = recyclerView.getLayoutManager().getItemCount();
+                int firstVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
 
+                if (!isLoading) {
+                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
+                            && firstVisibleItemPosition >= 0) {
+                        isLoading = true;
+                        Toast.makeText(getActivity(), "Loading...", Toast.LENGTH_SHORT)
+                                .show();
+                        new FetchNewsTask().execute(String.valueOf(numPage));
+                    }
+                }
+            }
+        });
+
+        updateUI();
         return view;
     }
 
-    private void setupAdapter() {
-        if (newsList == null) newsList = new ArrayList<>();
-        recyclerView.setAdapter(new NewsAdapter(newsList));
+    private void updateUI() {
+        if (adapter == null) {
+            adapter = new NewsAdapter(newsList);
+        } else {
+            adapter.notifyDataSetChanged();
+        }
+        if (recyclerView.getAdapter() == null) {
+            recyclerView.setAdapter(adapter);
+        }
+
+        updateSubtitle();
     }
 
-    private class FetchNewsTask extends AsyncTask<Void,Void,List<News>> {
+    private void updateSubtitle() {
+        if (newsList != null) {
+            int count = newsList.size();
+            String subtitle = "Count: ";
+            AppCompatActivity activity = (AppCompatActivity) getActivity();
+            activity.getSupportActionBar().setSubtitle(subtitle + count);
+        }
+    }
+
+    private class FetchNewsTask extends AsyncTask<String,Void,List<News>> {
         @Override
-        protected List<News> doInBackground(Void... voids) {
-            return new NewsFetcher().fetchNewsItems();
+        protected List<News> doInBackground(String... strings) {
+            int page = Integer.valueOf(strings[0]);
+            return new NewsFetcher().fetchNewsItems(page);
         }
 
         @Override
-        protected void onPostExecute(List<News> news) {
-            newsList = news;
-            setupAdapter();
+        protected void onPostExecute(List<News> newsL) {
+            isLoading = false;
+            if (newsL != null && newsL.size() > 0) {
+                numPage++;
+                newsList.addAll(newsL);
+                updateUI();
+            } else {
+                Toast.makeText(getActivity(), "There are no news any more", Toast.LENGTH_SHORT)
+                        .show();
+            }
         }
     }
 
@@ -136,7 +192,7 @@ public class NewsListFragment extends Fragment {
             this.news = news;
             titleTextView.setText(this.news.getTitle());
             sourceTextView.setText(this.news.getSourceName());
-            dateTextView.setText(DateFormat.format("yyyy-MM-dd HH:mm", this.news.getDate()));
+            dateTextView.setText(DateFormat.format(DATE_FORMAT, this.news.getDate()));
 
             Picasso.get()
                     .load(news.getUrlToImage())
