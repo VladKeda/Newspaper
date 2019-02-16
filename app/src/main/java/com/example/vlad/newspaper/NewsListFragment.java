@@ -1,6 +1,7 @@
 package com.example.vlad.newspaper;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ public class NewsListFragment extends Fragment {
     private List<News> newsList;
     private RecyclerView recyclerView;
 
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,7 +56,6 @@ public class NewsListFragment extends Fragment {
 
         recyclerView = (RecyclerView) view.findViewById(R.id.news_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-
 
         setupAdapter();
 
@@ -145,8 +146,8 @@ public class NewsListFragment extends Fragment {
 
         @Override
         public void onClick(View v) {
-            Toast.makeText(getActivity(), news.getTitle(), Toast.LENGTH_SHORT)
-                    .show();
+            Intent intent = NewsDetailActivity.newIntent(getActivity(), news.getUrl());
+            startActivity(intent);
         }
     }
 
