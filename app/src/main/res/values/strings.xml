@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Newspaper</string>
+    <string name="news_image_label">News Image</string>
+    <string name="internet_connection_error">"No Internet Connection"</string>
 </resources>
